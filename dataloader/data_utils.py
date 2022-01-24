@@ -51,7 +51,7 @@ def generate_query_kpts(img, mode, num_pts, h, w):
 
     elif mode == 'sift':
         gray1 = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        sift = cv2.xfeatures2d.SIFT_create(nfeatures=num_pts)
+        sift = cv2.SIFT_create(nfeatures=num_pts)
         kp1 = sift.detect(gray1)
         coord = np.array([[kp.pt[0], kp.pt[1]] for kp in kp1])
 
@@ -60,7 +60,7 @@ def generate_query_kpts(img, mode, num_pts, h, w):
         kp1_y = np.random.rand(1 * int(0.1 * num_pts)) * (h - 1)
         kp1_rand = np.stack((kp1_x, kp1_y)).T
 
-        sift = cv2.xfeatures2d.SIFT_create(nfeatures=int(0.9 * num_pts))
+        sift = cv2.SIFT_create(nfeatures=int(0.9 * num_pts))
         gray1 = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         kp1_sift = sift.detect(gray1)
         kp1_sift = np.array([[kp.pt[0], kp.pt[1]] for kp in kp1_sift])

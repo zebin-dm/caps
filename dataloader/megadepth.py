@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import Dataset
 import os
 import numpy as np
-import cv2
 import skimage.io as io
 import torchvision.transforms as transforms
 import utils
@@ -14,7 +13,7 @@ import dataloader.data_utils as data_utils
 rand = np.random.RandomState(234)
 
 
-class MegaDepthLoader():
+class MegaDepthLoader(object):
     def __init__(self, args):
         self.args = args
         self.dataset = MegaDepth(args)

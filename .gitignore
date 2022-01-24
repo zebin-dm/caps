@@ -5,3 +5,5 @@ jupyter/__pycache__/
 logs/
 out/
 models/
+checkpoint/
+.idea

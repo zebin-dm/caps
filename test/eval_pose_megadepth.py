@@ -219,7 +219,7 @@ class MegaDepthPose(object):
         #             font, fontScale, fontColor, lineType)
         pt1 = pt1[mask.ravel().astype(bool)]
         pt2 = pt2[mask.ravel().astype(bool)]
-        out = utils.drawlinesMatch(im1, im2, pt1, pt2)
+        out = visutils.drawlinesMatch(im1, im2, pt1, pt2)
         io.imsave(savepath, out)
 
     def pose_parallel(self, imf1, imf2, vis=False):

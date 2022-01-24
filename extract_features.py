@@ -26,7 +26,7 @@ class HPatchDataset(Dataset):
         im = io.imread(imf)
         im_tensor = self.transform(im)
         # using sift keypoints
-        sift = cv2.xfeatures2d.SIFT_create()
+        sift = cv2.SIFT_create()
         gray = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
         kpts = sift.detect(gray)
         kpts = np.array([[kp.pt[0], kp.pt[1]] for kp in kpts])
