@@ -140,9 +140,11 @@ class LocalFeatureBenchMark(object):
             "lf-net": ['LF-Net', 'brown', "-"],
             "d2-net": ['D2-Net', 'purple', "-"],
             "d2-net-ms": ['D2-Net MS', 'green', "-"],
-            "d2-net-trained": ['D2-Net Trained', 'purple', '--'],
-            "d2-net-trained-ms": ['D2-Net Trained MS', 'green', '--'],
-            "caps": ["CAPS+SIFT", 'yellow', 'dashdot']}
+            "d2-net-trained": ['D2-Net Trained', 'purple', '-'],
+            "d2-net-trained-ms": ['D2-Net Trained MS', 'green', '-'],
+            "caps": ["CAPS+SIFT", 'yellow', 'dashdot'],
+            "caps_f": ["CAPS_F+SIFT", 'teal', 'dashdot'],
+        }
 
         # Change here if you want to use top K or all features.
         # top_k = 2000
@@ -151,6 +153,8 @@ class LocalFeatureBenchMark(object):
         self.hpatches_info = HPatchInfo(data_root=os.path.join(data_cache_root, "hpatches-sequences-release"))
         self.feat_info = FeatureInfo()
         self.feat_info.checkpoint["caps"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_out2")
+        self.feat_info.checkpoint["caps_f"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_out_v2")
+        self.output = "./out"
         self.cache_dir = os.path.join(data_cache_root, "cache")
         if top_k is not None:
             self.cache_dir = os.path.join(data_cache_root, "cache-top")
@@ -187,7 +191,7 @@ class LocalFeatureBenchMark(object):
 
     # plotting
     @staticmethod
-    def plotting(methods, errors, data_info):
+    def plotting(methods, errors, data_info, output):
         n_i = data_info.num_i
         n_v = data_info.num_v
         plt_lim = [1, 10]
@@ -238,9 +242,9 @@ class LocalFeatureBenchMark(object):
         plt.tick_params(axis='both', which='major', labelsize=20)
 
         if top_k is None:
-            plt.savefig('hseq.png', bbox_inches='tight', dpi=300)
+            plt.savefig(os.path.join(output, 'hseq.png'), bbox_inches='tight', dpi=300)
         else:
-            plt.savefig('hseq-top.png', bbox_inches='tight', dpi=300)
+            plt.savefig(os.path.join(output, 'hseq-top.png'), bbox_inches='tight', dpi=300)
 
     def run(self):
         errors = self.matching(methods=self.methods,
@@ -249,11 +253,12 @@ class LocalFeatureBenchMark(object):
                                feat_info=self.feat_info)
         self.plotting(methods=self.methods,
                       errors=errors,
-                      data_info=self.hpatches_info)
+                      data_info=self.hpatches_info,
+                      output=self.output)
 
 
 if __name__ == "__main__":
-    data_cache_root = "/home/deepmirror/work/04.dataset/hpatches_sequences"
+    data_cache_root = "/home/dm/work/04.dataset/hpatches-sequences"
     top_k = None
     lf_benchmark = LocalFeatureBenchMark(data_cache_root=data_cache_root,
                                          top_k=top_k)

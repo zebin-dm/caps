@@ -70,8 +70,8 @@ class CAPSModel():
     def extract_features(self, im, coord):
         self.model.eval()
         with torch.no_grad():
-            feat_c, feat_f = self.model.extract_features(im, coord)
-        return feat_c, feat_f
+            feat_f = self.model.extract_features(im, coord)
+        return feat_f
 
     def write_summary(self, writer, n_iter):
         print("%s | Step: %d, Loss: %2.5f" % (self.args.exp_name, n_iter, self.j_loss.item()))

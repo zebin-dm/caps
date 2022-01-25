@@ -219,12 +219,11 @@ class CAPSNet(nn.Module):
         :param coord: [batch_size, n_pts, 2]
         :return: coarse features [batch_size, n_pts, coarse_feat_dim] and fine features [batch_size, n_pts, fine_feat_dim]
         '''
-        xc, xf = self.net(im)
+        xf = self.net(im)
         hi, wi = im.size()[2:]
         coord_n = self.normalize(coord, hi, wi)
-        feat_c = self.sample_feat_by_coord(xc, coord_n)
         feat_f = self.sample_feat_by_coord(xf, coord_n)
-        return feat_c, feat_f
+        return feat_f
 
     def test(self, im1, im2, coord1):
         '''
