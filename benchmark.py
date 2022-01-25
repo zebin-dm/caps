@@ -9,10 +9,6 @@ from tqdm import tqdm
 use_cuda = torch.cuda.is_available()
 device = torch.device('cuda:0' if use_cuda else 'cpu')
 
-methods = ['hesaff', 'hesaffnet', 'delf', 'delf-new', 'superpoint', 'lf-net', 'd2-net', 'd2-net-ms', 'd2-net-trained', 'd2-net-trained-ms', "caps"]
-names = ['Hes. Aff. + Root-SIFT', 'HAN + HN++', 'DELF', 'DELF New', 'SuperPoint', 'LF-Net', 'D2-Net', 'D2-Net MS', 'D2-Net Trained', 'D2-Net Trained MS', "CAPS+SIFT"]
-colors = ['black', 'orange', 'red', 'red', 'blue', 'brown', 'purple', 'green', 'purple', 'green', 'yellow']
-linestyles = ['-', '-', '-', '--', '-', '-', '-', '-', '--', '--', 'dashdot']
 
 # Change here if you want to use top K or all features.
 # top_k = 2000
@@ -162,53 +158,64 @@ for method in methods:
 
 
 # plotting
-plt_lim = [1, 10]
-plt_rng = np.arange(plt_lim[0], plt_lim[1] + 1)
+def plotting():
+    plt_lim = [1, 10]
+    plt_rng = np.arange(plt_lim[0], plt_lim[1] + 1)
 
-plt.rc('axes', titlesize=25)
-plt.rc('axes', labelsize=25)
+    plt.rc('axes', titlesize=25)
+    plt.rc('axes', labelsize=25)
 
-plt.figure(figsize=(15, 5))
+    plt.figure(figsize=(15, 5))
 
-plt.subplot(1, 3, 1)
-for method, name, color, ls in zip(methods, names, colors, linestyles):
-    i_err, v_err, _ = errors[method]
-    plt.plot(plt_rng, [(i_err[thr] + v_err[thr]) / ((n_i + n_v) * 5) for thr in plt_rng], color=color, ls=ls, linewidth=3, label=name)
-plt.title('Overall')
-plt.xlim(plt_lim)
-plt.xticks(plt_rng)
-plt.ylabel('MMA')
-plt.ylim([0, 1])
-plt.grid()
-plt.tick_params(axis='both', which='major', labelsize=20)
-plt.legend()
+    plt.subplot(1, 3, 1)
+    for method, name, color, ls in zip(methods, names, colors, linestyles):
+        i_err, v_err, _ = errors[method]
+        plt.plot(plt_rng, [(i_err[thr] + v_err[thr]) / ((n_i + n_v) * 5) for thr in plt_rng], color=color, ls=ls,
+                 linewidth=3, label=name)
+    plt.title('Overall')
+    plt.xlim(plt_lim)
+    plt.xticks(plt_rng)
+    plt.ylabel('MMA')
+    plt.ylim([0, 1])
+    plt.grid()
+    plt.tick_params(axis='both', which='major', labelsize=20)
+    plt.legend()
 
-plt.subplot(1, 3, 2)
-for method, name, color, ls in zip(methods, names, colors, linestyles):
-    i_err, v_err, _ = errors[method]
-    plt.plot(plt_rng, [i_err[thr] / (n_i * 5) for thr in plt_rng], color=color, ls=ls, linewidth=3, label=name)
-plt.title('Illumination')
-plt.xlabel('threshold [px]')
-plt.xlim(plt_lim)
-plt.xticks(plt_rng)
-plt.ylim([0, 1])
-plt.gca().axes.set_yticklabels([])
-plt.grid()
-plt.tick_params(axis='both', which='major', labelsize=20)
+    plt.subplot(1, 3, 2)
+    for method, name, color, ls in zip(methods, names, colors, linestyles):
+        i_err, v_err, _ = errors[method]
+        plt.plot(plt_rng, [i_err[thr] / (n_i * 5) for thr in plt_rng], color=color, ls=ls, linewidth=3, label=name)
+    plt.title('Illumination')
+    plt.xlabel('threshold [px]')
+    plt.xlim(plt_lim)
+    plt.xticks(plt_rng)
+    plt.ylim([0, 1])
+    plt.gca().axes.set_yticklabels([])
+    plt.grid()
+    plt.tick_params(axis='both', which='major', labelsize=20)
 
-plt.subplot(1, 3, 3)
-for method, name, color, ls in zip(methods, names, colors, linestyles):
-    i_err, v_err, _ = errors[method]
-    plt.plot(plt_rng, [v_err[thr] / (n_v * 5) for thr in plt_rng], color=color, ls=ls, linewidth=3, label=name)
-plt.title('Viewpoint')
-plt.xlim(plt_lim)
-plt.xticks(plt_rng)
-plt.ylim([0, 1])
-plt.gca().axes.set_yticklabels([])
-plt.grid()
-plt.tick_params(axis='both', which='major', labelsize=20)
+    plt.subplot(1, 3, 3)
+    for method, name, color, ls in zip(methods, names, colors, linestyles):
+        i_err, v_err, _ = errors[method]
+        plt.plot(plt_rng, [v_err[thr] / (n_v * 5) for thr in plt_rng], color=color, ls=ls, linewidth=3, label=name)
+    plt.title('Viewpoint')
+    plt.xlim(plt_lim)
+    plt.xticks(plt_rng)
+    plt.ylim([0, 1])
+    plt.gca().axes.set_yticklabels([])
+    plt.grid()
+    plt.tick_params(axis='both', which='major', labelsize=20)
 
-if top_k is None:
-    plt.savefig('hseq.png', bbox_inches='tight', dpi=300)
-else:
-    plt.savefig('hseq-top.png', bbox_inches='tight', dpi=300)
+    if top_k is None:
+        plt.savefig('hseq.png', bbox_inches='tight', dpi=300)
+    else:
+        plt.savefig('hseq-top.png', bbox_inches='tight', dpi=300)
+
+
+if __name__ == "__main__":
+    methods = ['hesaff', 'hesaffnet', 'delf', 'delf-new', 'superpoint', 'lf-net', 'd2-net', 'd2-net-ms',
+               'd2-net-trained', 'd2-net-trained-ms', "caps"]
+    names = ['Hes. Aff. + Root-SIFT', 'HAN + HN++', 'DELF', 'DELF New', 'SuperPoint', 'LF-Net', 'D2-Net', 'D2-Net MS',
+             'D2-Net Trained', 'D2-Net Trained MS', "CAPS+SIFT"]
+    colors = ['black', 'orange', 'red', 'red', 'blue', 'brown', 'purple', 'green', 'purple', 'green', 'yellow']
+    linestyles = ['-', '-', '-', '--', '-', '-', '-', '-', '--', '--', 'dashdot']

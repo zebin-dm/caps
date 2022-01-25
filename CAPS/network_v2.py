@@ -170,8 +170,8 @@ class CAPSNet(nn.Module):
         # xc1, xf1 = self.net(im1)
         # xc2, xf2 = self.net(im2)
 
-        _, xf1 = self.net(im1)
-        _, xf2 = self.net(im2)
+        xf1 = self.net(im1)
+        xf2 = self.net(im2)
 
         # image width and height
         h1i, w1i = im1.size()[2:]

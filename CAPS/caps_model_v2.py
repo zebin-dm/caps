@@ -51,7 +51,7 @@ class CAPSModel():
 
     def backward_net(self):
         loss = self.criterion(self.coord1, self.out, self.fmatrix, self.pose, self.imsize)
-        self.j_loss, self.eloss_c, self.eloss_f, self.closs_c, self.closs_f, self.std_loss = loss
+        self.j_loss, self.eloss_f, self.closs_f, self.std_loss = loss
         self.j_loss.backward()
 
     def optimize_parameters(self):
@@ -79,9 +79,9 @@ class CAPSModel():
         # write scalar
         if n_iter % self.args.log_scalar_interval == 0:
             writer.add_scalar('Total_loss', self.j_loss.item(), n_iter)
-            writer.add_scalar('epipolar_loss_coarse', self.eloss_c.item(), n_iter)
+            # writer.add_scalar('epipolar_loss_coarse', self.eloss_c.item(), n_iter)
             writer.add_scalar('epipolar_loss_fine', self.eloss_f.item(), n_iter)
-            writer.add_scalar('cycle_loss_coarse', self.closs_c.item(), n_iter)
+            # writer.add_scalar('cycle_loss_coarse', self.closs_c.item(), n_iter)
             writer.add_scalar('cycle_loss_fine', self.closs_f.item(), n_iter)
 
         # write image
