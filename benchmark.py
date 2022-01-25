@@ -6,22 +6,6 @@ import torch
 from scipy.io import loadmat
 from tqdm import tqdm
 
-use_cuda = torch.cuda.is_available()
-device = torch.device('cuda:0' if use_cuda else 'cpu')
-
-
-# Change here if you want to use top K or all features.
-# top_k = 2000
-top_k = None
-
-n_i = 52
-n_v = 56
-
-dataset_path = '/home/dm/work/04.dataset/hpatches-sequences/hpatches-sequences-release'
-
-lim = [1, 15]
-rng = np.arange(lim[0], lim[1] + 1)
-
 
 def mnn_matcher(descriptors_a, descriptors_b):
     device = descriptors_a.device
@@ -34,8 +18,12 @@ def mnn_matcher(descriptors_a, descriptors_b):
     return matches.t().data.cpu().numpy()
 
 
-def benchmark_features(read_feats):
-    seq_names = sorted(os.listdir(dataset_path))
+def benchmark_features(read_feats, data_info):
+    seq_names = sorted(os.listdir(data_info.data_root))
+    lim = [1, 15]
+    rng = np.arange(lim[0], lim[1] + 1)
+    use_cuda = torch.cuda.is_available()
+    device = torch.device('cuda:0' if use_cuda else 'cpu')
 
     n_feats = []
     n_matches = []
@@ -56,7 +44,7 @@ def benchmark_features(read_feats):
                 torch.from_numpy(descriptors_b).to(device=device)
             )
 
-            homography = np.loadtxt(os.path.join(dataset_path, seq_name, "H_1_" + str(im_idx)))
+            homography = np.loadtxt(os.path.join(data_info.data_root, seq_name, "H_1_" + str(im_idx)))
 
             pos_a = keypoints_a[matches[:, 0], : 2]
             pos_a_h = np.concatenate([pos_a, np.ones([matches.shape[0], 1])], axis=1)
@@ -86,20 +74,18 @@ def benchmark_features(read_feats):
     return i_err, v_err, [seq_type, n_feats, n_matches]
 
 
-def summary(stats):
+def summary(stats, data_info):
     seq_type, n_feats, n_matches = stats
     print('# Features: {:f} - [{:d}, {:d}]'.format(np.mean(n_feats), np.min(n_feats), np.max(n_feats)))
     print('# Matches: Overall {:f}, Illumination {:f}, Viewpoint {:f}'.format(
-        np.sum(n_matches) / ((n_i + n_v) * 5),
-        np.sum(n_matches[seq_type == 'i']) / (n_i * 5),
-        np.sum(n_matches[seq_type == 'v']) / (n_v * 5))
-    )
+        np.sum(n_matches) / ((data_info.num_i + data_info.num_v) * 5),
+        np.sum(n_matches[seq_type == 'i']) / (data_info.num_i * 5),
+        np.sum(n_matches[seq_type == 'v']) / (data_info.num_v * 5)))
 
-extract_ouput = "/home/dm/work/02.workspace/caps/out/extract_out2"
 
-def generate_read_function(method, extension='ppm'):
+def generate_read_function(method, feat_info, extension='ppm'):
     def read_function(seq_name, im_idx):
-        aux = np.load(os.path.join(extract_ouput, seq_name, '%d.%s.%s' % (im_idx, extension, method)))
+        aux = np.load(os.path.join(feat_info.checkpoint[method].path, seq_name, '%d.%s.%s' % (im_idx, extension, method)))
         if top_k is None:
             return aux['keypoints'], aux['descriptors']
         else:
@@ -126,96 +112,151 @@ def parse_mat(mat):
         return keypoints[ids, :], descriptors[ids, :]
 
 
-if top_k is None:
-    cache_dir = '/home/dm/work/04.dataset/hpatches-sequences/cache'
-else:
-    cache_dir = 'cache-top'
-if not os.path.isdir(cache_dir):
-    os.mkdir(cache_dir)
-
-errors = {}
+class HPatchInfo(object):
+    def __init__(self, data_root, num_i=52, num_v=56):
+        self.data_root = data_root
+        self.num_i = num_i
+        self.num_v = num_v
 
 
-errors = {}
-for method in methods:
-    output_file = os.path.join(cache_dir, method + '.npy')
-    print("find output file: {}".format(output_file))
-    print(method)
-    if method == 'hesaff':
-        read_function = lambda seq_name, im_idx: parse_mat(loadmat(os.path.join(dataset_path, seq_name, '%d.ppm.hesaff' % im_idx), appendmat=False))
-    else:
-        if method == 'delf' or method == 'delf-new':
-            read_function = generate_read_function(method, extension='png')
+class CheckPoint(object):
+    def __init__(self, path):
+        self.path = path
+
+
+class FeatureInfo(object):
+    def __init__(self):
+        self.checkpoint = {}
+
+
+class LocalFeatureBenchMark(object):
+    def __init__(self, data_cache_root, top_k=None):
+        self.methods = {
+            "hesaff": ["Hes. Aff. + Root-SIFT", "black", "-"],
+            "hesaffnet": ['HAN + HN++', 'orange', "-"],
+            "delf": ['DELF', 'red', "-"],
+            "delf-new": ['DELF New', 'red', "-"],
+            "superpoint": ['SuperPoint', 'blue', "-"],
+            "lf-net": ['LF-Net', 'brown', "-"],
+            "d2-net": ['D2-Net', 'purple', "-"],
+            "d2-net-ms": ['D2-Net MS', 'green', "-"],
+            "d2-net-trained": ['D2-Net Trained', 'purple', '--'],
+            "d2-net-trained-ms": ['D2-Net Trained MS', 'green', '--'],
+            "caps": ["CAPS+SIFT", 'yellow', 'dashdot']}
+
+        # Change here if you want to use top K or all features.
+        # top_k = 2000
+        self.top_k = top_k
+        self.data_cache_root = data_cache_root
+        self.hpatches_info = HPatchInfo(data_root=os.path.join(data_cache_root, "hpatches-sequences-release"))
+        self.feat_info = FeatureInfo()
+        self.feat_info.checkpoint["caps"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_out2")
+        self.cache_dir = os.path.join(data_cache_root, "cache")
+        if top_k is not None:
+            self.cache_dir = os.path.join(data_cache_root, "cache-top")
+
+
+
+
+
+        errors = {}
+
+    @staticmethod
+    def matching(methods, cache_dir, data_info, feat_info):
+        errors = {}
+        for method in methods.keys():
+            output_file = os.path.join(cache_dir, method + '.npy')
+            print("find output file: {}".format(output_file))
+            print(method)
+            if method == 'hesaff':
+                read_function = lambda seq_name, im_idx: parse_mat(
+                    loadmat(os.path.join(data_info.data_root, seq_name, '%d.ppm.hesaff' % im_idx), appendmat=False))
+            else:
+                if method == 'delf' or method == 'delf-new':
+                    read_function = generate_read_function(method, feat_info, extension='png')
+                else:
+                    read_function = generate_read_function(method, feat_info)
+            if os.path.exists(output_file):
+                print('Loading precomputed errors...')
+                errors[method] = np.load(output_file, allow_pickle=True)
+            else:
+                errors[method] = benchmark_features(read_function, data_info)
+                np.save(output_file, errors[method])
+            summary(errors[method][-1], data_info)
+        return errors
+
+    # plotting
+    @staticmethod
+    def plotting(methods, errors, data_info):
+        n_i = data_info.num_i
+        n_v = data_info.num_v
+        plt_lim = [1, 10]
+        plt_rng = np.arange(plt_lim[0], plt_lim[1] + 1)
+
+        plt.rc('axes', titlesize=25)
+        plt.rc('axes', labelsize=25)
+
+        plt.figure(figsize=(15, 5))
+
+        plt.subplot(1, 3, 1)
+        for method, [name, color, ls] in methods.items():
+            i_err, v_err, _ = errors[method]
+            plt.plot(plt_rng, [(i_err[thr] + v_err[thr]) / ((n_i + n_v) * 5) for thr in plt_rng], color=color, ls=ls,
+                     linewidth=3, label=name)
+        plt.title('Overall')
+        plt.xlim(plt_lim)
+        plt.xticks(plt_rng)
+        plt.ylabel('MMA')
+        plt.ylim([0, 1])
+        plt.grid()
+        plt.tick_params(axis='both', which='major', labelsize=20)
+        plt.legend()
+
+        plt.subplot(1, 3, 2)
+        for method, [name, color, ls] in methods.items():
+            i_err, v_err, _ = errors[method]
+            plt.plot(plt_rng, [i_err[thr] / (n_i * 5) for thr in plt_rng], color=color, ls=ls, linewidth=3, label=name)
+        plt.title('Illumination')
+        plt.xlabel('threshold [px]')
+        plt.xlim(plt_lim)
+        plt.xticks(plt_rng)
+        plt.ylim([0, 1])
+        plt.gca().axes.set_yticklabels([])
+        plt.grid()
+        plt.tick_params(axis='both', which='major', labelsize=20)
+
+        plt.subplot(1, 3, 3)
+        for method, [name, color, ls] in methods.items():
+            i_err, v_err, _ = errors[method]
+            plt.plot(plt_rng, [v_err[thr] / (n_v * 5) for thr in plt_rng], color=color, ls=ls, linewidth=3, label=name)
+        plt.title('Viewpoint')
+        plt.xlim(plt_lim)
+        plt.xticks(plt_rng)
+        plt.ylim([0, 1])
+        plt.gca().axes.set_yticklabels([])
+        plt.grid()
+        plt.tick_params(axis='both', which='major', labelsize=20)
+
+        if top_k is None:
+            plt.savefig('hseq.png', bbox_inches='tight', dpi=300)
         else:
-            read_function = generate_read_function(method)
-    if os.path.exists(output_file):
-        print('Loading precomputed errors...')
-        errors[method] = np.load(output_file, allow_pickle=True)
-    else:
-        errors[method] = benchmark_features(read_function)
-        np.save(output_file, errors[method])
-    summary(errors[method][-1])
+            plt.savefig('hseq-top.png', bbox_inches='tight', dpi=300)
 
-
-# plotting
-def plotting():
-    plt_lim = [1, 10]
-    plt_rng = np.arange(plt_lim[0], plt_lim[1] + 1)
-
-    plt.rc('axes', titlesize=25)
-    plt.rc('axes', labelsize=25)
-
-    plt.figure(figsize=(15, 5))
-
-    plt.subplot(1, 3, 1)
-    for method, name, color, ls in zip(methods, names, colors, linestyles):
-        i_err, v_err, _ = errors[method]
-        plt.plot(plt_rng, [(i_err[thr] + v_err[thr]) / ((n_i + n_v) * 5) for thr in plt_rng], color=color, ls=ls,
-                 linewidth=3, label=name)
-    plt.title('Overall')
-    plt.xlim(plt_lim)
-    plt.xticks(plt_rng)
-    plt.ylabel('MMA')
-    plt.ylim([0, 1])
-    plt.grid()
-    plt.tick_params(axis='both', which='major', labelsize=20)
-    plt.legend()
-
-    plt.subplot(1, 3, 2)
-    for method, name, color, ls in zip(methods, names, colors, linestyles):
-        i_err, v_err, _ = errors[method]
-        plt.plot(plt_rng, [i_err[thr] / (n_i * 5) for thr in plt_rng], color=color, ls=ls, linewidth=3, label=name)
-    plt.title('Illumination')
-    plt.xlabel('threshold [px]')
-    plt.xlim(plt_lim)
-    plt.xticks(plt_rng)
-    plt.ylim([0, 1])
-    plt.gca().axes.set_yticklabels([])
-    plt.grid()
-    plt.tick_params(axis='both', which='major', labelsize=20)
-
-    plt.subplot(1, 3, 3)
-    for method, name, color, ls in zip(methods, names, colors, linestyles):
-        i_err, v_err, _ = errors[method]
-        plt.plot(plt_rng, [v_err[thr] / (n_v * 5) for thr in plt_rng], color=color, ls=ls, linewidth=3, label=name)
-    plt.title('Viewpoint')
-    plt.xlim(plt_lim)
-    plt.xticks(plt_rng)
-    plt.ylim([0, 1])
-    plt.gca().axes.set_yticklabels([])
-    plt.grid()
-    plt.tick_params(axis='both', which='major', labelsize=20)
-
-    if top_k is None:
-        plt.savefig('hseq.png', bbox_inches='tight', dpi=300)
-    else:
-        plt.savefig('hseq-top.png', bbox_inches='tight', dpi=300)
+    def run(self):
+        errors = self.matching(methods=self.methods,
+                               cache_dir=self.cache_dir,
+                               data_info=self.hpatches_info,
+                               feat_info=self.feat_info)
+        self.plotting(methods=self.methods,
+                      errors=errors,
+                      data_info=self.hpatches_info)
 
 
 if __name__ == "__main__":
-    methods = ['hesaff', 'hesaffnet', 'delf', 'delf-new', 'superpoint', 'lf-net', 'd2-net', 'd2-net-ms',
-               'd2-net-trained', 'd2-net-trained-ms', "caps"]
-    names = ['Hes. Aff. + Root-SIFT', 'HAN + HN++', 'DELF', 'DELF New', 'SuperPoint', 'LF-Net', 'D2-Net', 'D2-Net MS',
-             'D2-Net Trained', 'D2-Net Trained MS', "CAPS+SIFT"]
-    colors = ['black', 'orange', 'red', 'red', 'blue', 'brown', 'purple', 'green', 'purple', 'green', 'yellow']
-    linestyles = ['-', '-', '-', '--', '-', '-', '-', '-', '--', '--', 'dashdot']
+    data_cache_root = "/home/deepmirror/work/04.dataset/hpatches_sequences"
+    top_k = None
+    lf_benchmark = LocalFeatureBenchMark(data_cache_root=data_cache_root,
+                                         top_k=top_k)
+    lf_benchmark.run()
+
+
