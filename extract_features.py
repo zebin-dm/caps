@@ -60,14 +60,14 @@ if __name__ == '__main__':
             desc = torch.cat((feat_c, feat_f), -1).squeeze(0).detach().cpu().numpy()
             kpt = coord.cpu().numpy().squeeze(0)
 
-            out_path = os.path.join(outdir, '{}-{}'.format(os.path.basename(os.path.dirname(img_path)),
-                                                           os.path.basename(img_path),
-                                                           ))
-            with open(out_path + '.caps', 'wb') as output_file:
+            save_folder = os.path.join(outdir, os.path.basename(os.path.dirname(img_path)))
+            os.makedirs(save_folder, exist_ok=True)
+            save_file = os.path.join(save_folder, "{}.caps".format(os.path.basename(img_path)))
+
+            with open(save_file, 'wb') as output_file:
                 np.savez(
                     output_file,
                     keypoints=kpt,
                     scores=[],
-                    descriptors=desc
-                )
+                    descriptors=desc)
 

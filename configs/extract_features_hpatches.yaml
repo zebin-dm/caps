@@ -2,6 +2,6 @@
 
 expname: feature_extraction
 # replace the following with your pretrained model path, img_dir and out_dir, respectively
-ckpt_path: 'pretrained/caps-pretrained.pth'
-extract_img_dir: '/phoenix/S7/qw246/hpatches-benchmark/data/d2net/hpatches-sequences-release/'
-extract_out_dir: '/phoenix/S7/qw246/hpatches-benchmark/data/output/desc/caps/'
+ckpt_path: '/home/dm/work/02.workspace/caps/out/train_caps/030000.pth'
+extract_img_dir: '/home/dm/work/04.dataset/hpatches-sequences/hpatches-sequences-release'
+extract_out_dir: '/home/dm/work/02.workspace/caps/out/extract_out2'
