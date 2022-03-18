@@ -1,0 +1,1 @@
+python extract_features_v3.py --config configs/extract_features_hpatches_v3.yaml

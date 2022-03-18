@@ -3,7 +3,7 @@ import config
 from tensorboardX import SummaryWriter
 from CAPS.caps_model import CAPSModel
 from dataloader.megadepth import MegaDepthLoader
-from utils import cycle
+from visutils.utils import cycle
 
 
 def train_megadepth(args):

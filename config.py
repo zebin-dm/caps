@@ -25,7 +25,8 @@ def get_args():
     parser.add_argument('--prune_kp', type=int, default=1, help='if prune non-matchable keypoints')
 
     # training options
-    parser.add_argument('--batch_size', type=int, default=5, help='input batch size')
+    # modify: the original size 7, set 1 only for test
+    parser.add_argument('--batch_size', type=int, default=14, help='input batch size')
     parser.add_argument('--lr', type=float, default=1e-4, help='base learning rate')
     parser.add_argument("--lrate_decay_steps", type=int, default=80000,
                         help='decay learning rate by a factor every specified number of steps')
@@ -37,6 +38,9 @@ def get_args():
                         help='backbone for feature representation extraction. supported: resent')
     parser.add_argument('--pretrained', type=int, default=1,
                         help='if use ImageNet pretrained weights to initialize the network')
+
+    # modify: add magic pretrain
+    parser.add_argument('--magic_pretrain', type=str, help="pretrain model")
     parser.add_argument('--coarse_feat_dim', type=int, default=128,
                         help='the feature dimension for coarse level features')
     parser.add_argument('--fine_feat_dim', type=int, default=128,
@@ -74,3 +78,4 @@ def get_args():
     args = parser.parse_known_args()[0]
 
     return args
+

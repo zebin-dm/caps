@@ -1,0 +1,1 @@
+python export_model.py --config configs/extract_features_hpatches_v3.yaml

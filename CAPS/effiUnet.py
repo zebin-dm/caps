@@ -40,7 +40,11 @@ class EfficientUNet(nn.Module):
         #     filters = [256, 512, 1024, 2048]
 
         filters = [24, 40, 112]
-        efficient_ins = efficientnet.efficientnet_b0(pretrained=True)
+        efficient_ins = efficientnet.efficientnet_b0(pretrained=pretrained)
+
+        if encoder == "b1":
+            efficient_ins = efficientnet.efficientnet_b1(pretrained=pretrained)
+
         self.layer1_3 = efficient_ins.features[:3]   # H/4
         self.layer4 = efficient_ins.features[3]      # H/8
         self.layer5_6 = efficient_ins.features[4:6]  # H/16
@@ -50,7 +54,7 @@ class EfficientUNet(nn.Module):
         self.upconv2 = upconv(filters[1], filters[0], 3, 2)
         self.iconv2 = conv(filters[0] + filters[0], filters[0] + filters[0], 3, 1)
         # fine-level conv
-        self.conv_fine = conv(48, fine_out_ch, 1, 1)
+        self.conv_fine = conv(filters[0] + filters[0], fine_out_ch, 1, 1)
 
         # self.firstconv = resnet.conv1  # H/2
         # self.firstbn = resnet.bn1
@@ -108,7 +112,7 @@ class EfficientUNet(nn.Module):
         #
         # x_fine = self.conv_fine(x)
         # return [x_coarse, x_fine]
-
+        # print("x shape: {}".format(x.shape))
         x_s4 = self.layer1_3(x)
         # print("x_s4 shape: {}".format(x_s4.shape))
         x_s8 = self.layer4(x_s4)
@@ -119,6 +123,8 @@ class EfficientUNet(nn.Module):
         x = self.upconv3(x_16)
         # print("x shape: {}, x_s8 shape: {}".format(x.shape, x_s8.shape))
         # x = self.skipconnect(x_s8, x)
+        # print(x_s8.shape)
+        # print(x.shape)
         x = torch.cat([x_s8, x], dim=1)
         x = self.iconv3(x)
 

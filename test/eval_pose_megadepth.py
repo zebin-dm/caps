@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append('../')
 import scipy
-import utils
+import visutils.utils as utils
 from skimage import io
 from pathos.multiprocessing import ProcessingPool as Pool
 import csv

@@ -111,3 +111,12 @@ def prune_kpts(coord1, F_gt, im2_size, intrinsic1, intrinsic2, pose, d_min, d_ma
 
     ind_intersect = ~(non_intersect | out_range)
     return ind_intersect
+
+
+if __name__ == "__main__":
+    img_path = "/home/dm/work/04.dataset/youfang/back/580.png"
+    image = cv2.imread(img_path)
+    h, w = image.shape[:2]
+    coord = generate_query_kpts(image, mode="sift", num_pts=100, h=h, w=w)
+    print(coord.shape)
+

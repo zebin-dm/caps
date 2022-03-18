@@ -1,0 +1,4 @@
+# training from scratch using a single gpu, default configs in config.py file
+exp_name: train_caps_temp
+datadir: /home/dm/work/04.dataset/CAPS-MegaDepth-release-light  # replace with your data dir
+batch_size: 7

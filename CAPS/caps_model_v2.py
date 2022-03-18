@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch import optim
 from torch.autograd import Variable
-import utils
+import utils.draw_utils as draw_utils
 import torchvision.utils as vutils
 from CAPS.criterion_v2 import CtoFCriterion
 from CAPS.network_v2 import CAPSNet
@@ -21,7 +21,8 @@ class CAPSModel():
 
         # init model, optimizer, scheduler
         self.model = CAPSNet(args, self.device)
-        self.optimizer = optim.Adam(self.model.parameters(), lr=self.args.lr)
+        # self.optimizer = optim.Adam(self.model.parameters(), lr=self.args.lr)
+        self.optimizer = optim.AdamW(self.model.parameters(), lr=self.args.lr, weight_decay=1e-3, amsgrad=True)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer,
                                                          step_size=args.lrate_decay_steps,
                                                          gamma=args.lrate_decay_factor)
@@ -86,19 +87,21 @@ class CAPSModel():
 
         # write image
         if n_iter % self.args.log_img_interval == 0:
+        # if True:
             # this visualization shows a number of query points in the first image,
             # and their predicted correspondences in the second image,
             # the groundtruth epipolar lines for the query points are plotted in the second image
             num_kpts_display = 20
             im1_o = self.im1_ori[0].numpy()
             im2_o = self.im2_ori[0].numpy()
+            # print(im1_o.shape)
             kpt1 = self.coord1.cpu().numpy()[0][:num_kpts_display, :]
             # predicted correspondence
             correspondence = self.out['coord2_ef']
             kpt2 = correspondence.detach().cpu().numpy()[0][:num_kpts_display, :]
             lines2 = cv2.computeCorrespondEpilines(kpt1.reshape(-1, 1, 2), 1, self.fmatrix[0].cpu().numpy())
             lines2 = lines2.reshape(-1, 3)
-            im2_o, im1_o = utils.drawlines(im2_o, im1_o, lines2, kpt2, kpt1)
+            im2_o, im1_o = draw_utils.drawlines(im2_o, im1_o, lines2, kpt2, kpt1)
             vis = np.concatenate((im1_o, im2_o), 1)
             vis = torch.from_numpy(vis.transpose(2, 0, 1)).float().unsqueeze(0)
             x = vutils.make_grid(vis, normalize=True)

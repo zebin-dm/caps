@@ -1,7 +1,0 @@
-# extract feature descriptors using pretrained model weights
-
-expname: feature_extraction
-# replace the following with your pretrained model path, img_dir and out_dir, respectively
-ckpt_path: '/home/dm/work/02.workspace/caps/out/train_caps_v2_1/020000.pth'
-extract_img_dir: '/home/dm/work/04.dataset/hpatches-sequences/hpatches-sequences-release'
-extract_out_dir: '/home/dm/work/02.workspace/caps/out/extract_out_v2'

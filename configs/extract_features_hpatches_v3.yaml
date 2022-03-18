@@ -1,0 +1,8 @@
+# extract feature descriptors using pretrained model weights
+
+expname: train_caps_magic_v3_2
+# replace the following with your pretrained model path, img_dir and out_dir, respectively
+ckpt_path: '/home/dm/work/02.workspace/caps/out/train_caps_magic_v3_2/200000.pth'
+phase: "test"
+extract_img_dir: '/home/dm/work/04.dataset/hpatches-sequences/hpatches-sequences-release'
+extract_out_dir: '/home/dm/work/02.workspace/caps/out/extract_magic_v3_2'

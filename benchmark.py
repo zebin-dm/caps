@@ -132,18 +132,26 @@ class FeatureInfo(object):
 class LocalFeatureBenchMark(object):
     def __init__(self, data_cache_root, top_k=None):
         self.methods = {
-            "hesaff": ["Hes. Aff. + Root-SIFT", "black", "-"],
-            "hesaffnet": ['HAN + HN++', 'orange', "-"],
-            "delf": ['DELF', 'red', "-"],
-            "delf-new": ['DELF New', 'red', "-"],
+            # "hesaff": ["Hes. Aff. + Root-SIFT", "black", "-"],
+            # "hesaffnet": ['HAN + HN++', 'orange', "-"],
+            # "delf": ['DELF', 'red', "-"],
+            # "delf-new": ['DELF New', 'red', "-"],
             "superpoint": ['SuperPoint', 'blue', "-"],
-            "lf-net": ['LF-Net', 'brown', "-"],
-            "d2-net": ['D2-Net', 'purple', "-"],
-            "d2-net-ms": ['D2-Net MS', 'green', "-"],
-            "d2-net-trained": ['D2-Net Trained', 'purple', '-'],
-            "d2-net-trained-ms": ['D2-Net Trained MS', 'green', '-'],
+            # "lf-net": ['LF-Net', 'brown', "-"],
+            # "d2-net": ['D2-Net', 'purple', "-"],
+            # "d2-net-ms": ['D2-Net MS', 'green', "-"],
+            # "d2-net-trained": ['D2-Net Trained', 'purple', '-'],
+            # "d2-net-trained-ms": ['D2-Net Trained MS', 'green', '-'],
             "caps": ["CAPS+SIFT", 'yellow', 'dashdot'],
             "caps_f": ["CAPS_F+SIFT", 'teal', 'dashdot'],
+            # "caps_effi": ["CAPS_Effi+SIFT", 'blue', 'dashdot'],
+            "caps_effiv2": ["CAPS_EffiV2+SIFT", 'green', 'dashdot'],
+            # "caps_effiv3": ["CAPS_EffiV3+SIFT", 'red', 'dashdot'],
+            "magicv1": ["CAPS_MAGICV1", 'black', 'dashdot'],
+            "magicv2": ["CAPS_MAGICV2", 'blue', 'dashdot'],
+            "magicv3_2": ["CAPS_MAGICV3", 'orange', 'dashdot'],
+            "magic_testv1": ["Test_V1", "purple", 'dashdot'],
+            "magic_testv2": ["Test_V2", "red", 'dashdot']
         }
 
         # Change here if you want to use top K or all features.
@@ -153,17 +161,21 @@ class LocalFeatureBenchMark(object):
         self.hpatches_info = HPatchInfo(data_root=os.path.join(data_cache_root, "hpatches-sequences-release"))
         self.feat_info = FeatureInfo()
         self.feat_info.checkpoint["caps"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_out2")
-        self.feat_info.checkpoint["caps_f"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_out_v2")
+        self.feat_info.checkpoint["caps_f"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_out_v2_2")
+        # self.feat_info.checkpoint["caps_effi"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_out_v2_effi")
+        self.feat_info.checkpoint["caps_effiv2"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_out_v2_effiv2")
+        # self.feat_info.checkpoint["caps_effiv3"] = CheckPoint(
+        #     "/home/dm/work/02.workspace/caps/out/extract_out_v2_effiv3")
+        self.feat_info.checkpoint["magicv1"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_magic_v1")
+        self.feat_info.checkpoint["magicv2"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_magic_v2")
+        self.feat_info.checkpoint["magicv3_2"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_magic_v3_2")
+        self.feat_info.checkpoint["magic_testv1"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_testv1")
+        self.feat_info.checkpoint["magic_testv2"] = CheckPoint("/home/dm/work/02.workspace/caps/out/extract_testv2")
+       
         self.output = "./out"
         self.cache_dir = os.path.join(data_cache_root, "cache")
         if top_k is not None:
             self.cache_dir = os.path.join(data_cache_root, "cache-top")
-
-
-
-
-
-        errors = {}
 
     @staticmethod
     def matching(methods, cache_dir, data_info, feat_info):

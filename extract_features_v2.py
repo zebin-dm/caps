@@ -6,6 +6,7 @@ import cv2
 import skimage.io as io
 import torchvision.transforms as transforms
 import config
+import math
 from tqdm import tqdm
 from CAPS.caps_model_v2 import CAPSModel
 
@@ -25,6 +26,18 @@ class HPatchDataset(Dataset):
         imf = self.imfs[item]
         im = io.imread(imf)
         im_tensor = self.transform(im)
+        c, h, w = im_tensor.shape
+        div_num = 16
+        if (h % div_num) != 0 or (w % div_num) != 0:
+            nh = math.ceil(h / div_num) * div_num
+            nw = math.ceil(w / div_num) * div_num
+            bot_pad = nh - h
+            rig_pad = nw - w
+            m = torch.nn.ReflectionPad2d((0, rig_pad, 0, bot_pad))
+            im_tensor = m(im_tensor)
+            # print("padding h :{}, padding w:{}".format(bot_pad, rig_pad))
+            # print("padding shape: {}".format(im_tensor.shape))
+
         # using sift keypoints
         sift = cv2.SIFT_create()
         gray = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
@@ -62,7 +75,7 @@ if __name__ == '__main__':
 
             save_folder = os.path.join(outdir, os.path.basename(os.path.dirname(img_path)))
             os.makedirs(save_folder, exist_ok=True)
-            save_file = os.path.join(save_folder, "{}.caps_f".format(os.path.basename(img_path)))
+            save_file = os.path.join(save_folder, "{}.caps_effiv3".format(os.path.basename(img_path)))
 
             with open(save_file, 'wb') as output_file:
                 np.savez(

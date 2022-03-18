@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import importlib
+from CAPS.effiUnet import EfficientUNet
 
 
 class CAPSNet(nn.Module):
@@ -9,10 +10,12 @@ class CAPSNet(nn.Module):
         super(CAPSNet, self).__init__()
         self.args = args
         self.device = device
-        self.net = ResUNet(pretrained=args.pretrained,
-                           encoder=args.backbone,
-                           coarse_out_ch=args.coarse_feat_dim,
-                           fine_out_ch=args.fine_feat_dim).to(self.device)
+        # self.net = ResUNet(pretrained=args.pretrained,
+        #                    encoder=args.backbone,
+        #                    coarse_out_ch=args.coarse_feat_dim,
+        #                    fine_out_ch=args.fine_feat_dim).to(self.device)
+
+        self.net = EfficientUNet().to(self.device)
 
     @staticmethod
     def normalize(coord, h, w):

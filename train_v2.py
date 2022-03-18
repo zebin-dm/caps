@@ -1,9 +1,10 @@
+from inspect import ArgSpec
 import os
 import config
 from tensorboardX import SummaryWriter
 from CAPS.caps_model_v2 import CAPSModel
 from dataloader.megadepth import MegaDepthLoader
-from utils import cycle
+from utils.draw_utils import cycle
 
 
 def train_megadepth(args):
@@ -41,6 +42,7 @@ def train_megadepth(args):
 
 if __name__ == '__main__':
     args = config.get_args()
+    print(args)
     train_megadepth(args)
 
 

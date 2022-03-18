@@ -9,7 +9,7 @@ class CtoFCriterion(nn.Module):
         self.w_ec = args.w_epipolar_coarse
         self.w_ef = args.w_epipolar_fine
         self.w_cc = args.w_cycle_coarse
-        self.w_cf = args.w_cycle_coarse
+        self.w_cf = args.w_cycle_fine
         self.w_std = args.w_std
 
     def homogenize(self, coord):
@@ -59,7 +59,7 @@ class CtoFCriterion(nn.Module):
 
     def forward(self, coord1, data, fmatrix, pose, im_size):
         coord2_ef = data['coord2_ef']
-        coord1_lf = data['coord1_ef']
+        coord1_ef = data['coord1_ef']
         std_2f = data['std_2f']
         std_1f = data['std_1f']
         shorter_edge, longer_edge = min(im_size), max(im_size)
@@ -86,11 +86,12 @@ class CtoFCriterion(nn.Module):
         weight_cycle_f = self.set_weight(std_2f * std_1f, mask=mask_cycle_f)
 
         # closs_c = self.cycle_consistency_loss(coord1, coord1_lc, weight_cycle_c) / longer_edge
-        closs_f = self.cycle_consistency_loss(coord1, coord1_lf, weight_cycle_f) / longer_edge
+        closs_f = self.cycle_consistency_loss(coord1, coord1_ef, weight_cycle_f) / longer_edge
 
         loss = self.w_ef * eloss_f + self.w_cf * closs_f
 
-        std_loss = torch.mean(std_1f)
+        # std_loss = torch.mean(std_1f) + torch.mean(std_2f)
+        std_loss = torch.mean(std_2f)
         loss += self.w_std * std_loss
 
         return loss, eloss_f, closs_f, std_loss

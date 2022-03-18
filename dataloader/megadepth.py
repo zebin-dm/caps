@@ -1,10 +1,11 @@
 import torch
+from loguru import logger
 from torch.utils.data import Dataset
 import os
 import numpy as np
 import skimage.io as io
 import torchvision.transforms as transforms
-import utils
+import utils.draw_utils as draw_utils
 import collections
 from tqdm import tqdm
 import dataloader.data_utils as data_utils
@@ -22,6 +23,7 @@ class MegaDepthLoader(object):
 
     def my_collate(self, batch):
         ''' Puts each data field into a tensor with outer dimension batch size '''
+        # logger.info("my collate batch size is : {}".format(len(batch)))
         batch = list(filter(lambda b: b is not None, batch))
         return torch.utils.data.dataloader.default_collate(batch)
 
@@ -40,13 +42,25 @@ class MegaDepth(Dataset):
         self.args = args
         if args.phase == 'train':
             # augment during training
+            # self.transform = transforms.Compose([transforms.ToPILImage(),
+            #                                      transforms.ColorJitter
+            #                                      (brightness=1, contrast=1, saturation=1, hue=0.4),
+            #                                      transforms.ToTensor(),
+            #                                      transforms.Normalize(mean=(0.485, 0.456, 0.406),
+            #                                                           std=(0.229, 0.224, 0.225)),
+            #                                      ])
+
             self.transform = transforms.Compose([transforms.ToPILImage(),
-                                                 transforms.ColorJitter
-                                                 (brightness=1, contrast=1, saturation=1, hue=0.4),
+                                                 transforms.RandomChoice([
+                                                     transforms.RandomApply([transforms.ColorJitter(brightness=1, contrast=1, saturation=1, hue=0.4),], p=0.7),
+                                                     transforms.RandomAutocontrast()]),
+                                                 transforms.RandomGrayscale(p=0.5),
+                                                 transforms.RandomApply([transforms.GaussianBlur(kernel_size=(3, 3)),], p=0.3),
                                                  transforms.ToTensor(),
                                                  transforms.Normalize(mean=(0.485, 0.456, 0.406),
                                                                       std=(0.229, 0.224, 0.225)),
                                                  ])
+
         else:
             self.transform = transforms.Compose([transforms.ToTensor(),
                                                  transforms.Normalize(mean=(0.485, 0.456, 0.406),
@@ -181,7 +195,7 @@ class MegaDepth(Dataset):
                 return None
             coord1 = coord1[ind_intersect]
 
-        coord1 = utils.random_choice(coord1, self.args.num_pts)
+        coord1 = draw_utils.random_choice(coord1, self.args.num_pts)
         coord1 = torch.from_numpy(coord1).float()
 
         im1_ori, im2_ori = torch.from_numpy(im1), torch.from_numpy(im2)
