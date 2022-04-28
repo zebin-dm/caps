@@ -1,1 +1,3 @@
-export PYTHONPATH=/home/dm/work/02.workspace/caps:$PYTHONPATH
+root_path="/data/zebin"
+export TORCH_HOME="${root_path}/pretrain"
+export PYTHONPATH=/data/zebin/lfnet/caps:$PYTHONPATH
